@@ -12,8 +12,7 @@ import eu.jrichter.cashplanner.SpringBootApp;
 import eu.jrichter.cashplanner.general.common.DbTestHelper;
 import eu.jrichter.cashplanner.general.common.RestTestClientBuilder;
 import eu.jrichter.cashplanner.general.common.SecurityTestHelper;
-import eu.jrichter.cashplanner.general.service.impl.config.RestaurantTestConfig;
-import io.oasp.module.basic.common.api.config.SpringProfileConstants;
+import eu.jrichter.cashplanner.general.service.impl.config.TestConfig;
 import io.oasp.module.test.common.base.SubsystemTest;
 
 /**
@@ -23,10 +22,8 @@ import io.oasp.module.test.common.base.SubsystemTest;
  *
  */
 
-@SpringBootTest(classes = { RestaurantTestConfig.class,
-SpringBootApp.class }, webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = { TestConfig.class, SpringBootApp.class }, webEnvironment = WebEnvironment.RANDOM_PORT)
 public abstract class AbstractRestServiceTest extends SubsystemTest {
-
 
   /**
    * The port of the web server during the test.
@@ -35,7 +32,7 @@ public abstract class AbstractRestServiceTest extends SubsystemTest {
   protected int port;
 
   /**
-   * The {@code RestaurantTestHelper}.
+   * The {@code SecurityTestHelper}.
    */
   @Inject
   private SecurityTestHelper securityTestHelper;

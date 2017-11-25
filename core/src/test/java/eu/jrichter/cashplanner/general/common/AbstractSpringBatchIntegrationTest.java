@@ -1,7 +1,6 @@
 package eu.jrichter.cashplanner.general.common;
 
 import java.io.File;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,12 +36,12 @@ public abstract class AbstractSpringBatchIntegrationTest extends ComponentTest {
   private static final String TMP_DIR = "./tmp";
 
   /** scripts for all tests db setup */
-  private static final String ALL_TESTS_DB_SETUP_DIR = "classpath:AllTests/setup/db";
+  private static final String ALL_TESTS_DB_SETUP_DIR = "classpath:AllSpringBatchApplicationTests/setup/db";
 
   protected static void login(String login, String password, String... permissions) {
-  
+
     Set<String> groups = new HashSet<>(Arrays.asList(permissions));
-  
+
     Set<GrantedAuthority> authorities = new HashSet<>();
     for (String permission : groups) {
       authorities.add(new AccessControlGrantedAuthority(new AccessControlPermission(permission)));
@@ -52,7 +51,7 @@ public abstract class AbstractSpringBatchIntegrationTest extends ComponentTest {
   }
 
   public static void logout() {
-  
+
     SecurityContextHolder.getContext().setAuthentication(null);
   }
 

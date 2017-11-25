@@ -1,0 +1,10 @@
+--Rename this file to V9001_1__Delete_data_ORCL.sql.orcl if the database used is not Oracle 11g
+
+-- *** table OFFER as an example ***
+--ALTER TABLE OFFER DISABLE CONSTRAINT FK_OFFER2MEAL;
+
+-- *** table PRODUCT as an example ***
+--DELETE FROM PRODUCT;
+
+-- *** table OFFER as an example ***
+--ALTER TABLE OFFER ENABLE CONSTRAINT FK_OFFER2MEAL;

@@ -13,20 +13,21 @@ import io.oasp.module.basic.common.api.config.SpringProfileConstants;
 
 /**
  * This configuration class provides {@code @Bean} annotated methods. It is applied to a test class by using the
- * following class annotation: {@code @SpringApplicationConfiguration(classes = RestaurantTestConfig.class)}. Hence,
- * beans provided by {@code @Bean} annotated methods will not be available outside the test configuration. <br/>
+ * following class annotation: {@code @SpringApplicationConfiguration(classes = TestConfig.class)}. Hence, beans
+ * provided by {@code @Bean} annotated methods will not be available outside the test configuration. <br/>
  * <br/>
  * See {@link AbstractRestServiceTest} as an example.
  *
  */
 @Configuration
 @Profile(SpringProfileConstants.JUNIT)
-public class RestaurantTestConfig {
+public class TestConfig {
 
   /**
    * The constructor.
    */
-  public RestaurantTestConfig() {
+  public TestConfig() {
+
     super();
   }
 

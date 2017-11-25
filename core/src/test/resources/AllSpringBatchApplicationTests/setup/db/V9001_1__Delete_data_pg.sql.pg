@@ -1,0 +1,10 @@
+--Rename this file to V9001_1__Delete_data_pg.sql.pg if the database used is not PostGres
+
+-- *** table OFFER as an exmaple ***
+--ALTER TABLE OFFER ALTER CONSTRAINT FK_OFFER2SIDEDISH DEFERRABLE;
+
+-- *** table PRODUCT as an exmaple ***
+--DELETE FROM PRODUCT;
+
+-- *** table OFFER as an exmaple ***
+--ALTER TABLE OFFER ALTER CONSTRAINT FK_OFFER2SIDEDISH NOT DEFERRABLE;

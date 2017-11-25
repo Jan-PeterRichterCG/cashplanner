@@ -1,0 +1,11 @@
+--Rename this file to V9001_1__Delete_data_MSSQL.sql.mssql if the database used is not MS SQL Server 2008
+
+-- *** table OFFER as an example
+--ALTER TABLE OFFER NOCHECK CONSTRAINT FK_OFFER2MEAL;
+
+-- *** table PRODUCT as an example ***
+--DELETE FROM PRODUCT;
+
+-- *** able OFFER as an example
+--ALTER TABLE OFFER CHECK CONSTRAINT FK_OFFER2MEAL;
+

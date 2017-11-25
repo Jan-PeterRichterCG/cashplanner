@@ -1,13 +1,11 @@
 package eu.jrichter.cashplanner.general.common.api;
 
-import eu.jrichter.cashplanner.general.common.api.datatype.Role;
-
 import java.security.Principal;
 
+import eu.jrichter.cashplanner.general.common.api.datatype.Role;
+
 /**
- * This is the interface for the profile of a user interacting with this application. Currently this can only be a
- * {@link eu.jrichter.cashplanner.staffmanagement.dataaccess.api.StaffMemberEntity} however in the future a
- * customer may login and make a reservation, etc.<br/>
+ * This is the interface for the profile of a user interacting with this application. <br/>
  * TODO: Also an external system may access the application via some service. Then there would be no user profile or it
  * would be empty...
  *
@@ -21,6 +19,7 @@ public interface UserProfile extends Principal {
   /**
    * @return the unique login of the user for authentication and identification.
    */
+  @Override
   String getName();
 
   /**

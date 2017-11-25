@@ -2,11 +2,9 @@ package eu.jrichter.cashplanner.general.common.api.datatype;
 
 import java.security.Principal;
 
-
 public enum Role implements Principal {
 
-  
-  CHIEF("Chief");
+  DUMMY_ROLE("Dummy Role");
 
   private final String name;
 
