@@ -62,8 +62,8 @@ public abstract class BaseWebSecurityConfig extends WebSecurityConfigurerAdapter
   @Override
   public void configure(HttpSecurity http) throws Exception {
 
-    String[] unsecuredResources =
-        new String[] { "/login", "/security/**", "/services/rest/login", "/services/rest/logout" };
+    String[] unsecuredResources = new String[] { "/login", "/security/**", "/services/rest/login",
+    "/services/rest/logout" };
 
     http
         //
@@ -98,8 +98,8 @@ public abstract class BaseWebSecurityConfig extends WebSecurityConfigurerAdapter
    */
   protected Filter getSimpleRestLogoutFilter() {
 
-    LogoutFilter logoutFilter =
-        new LogoutFilter(new LogoutSuccessHandlerReturningOkHttpStatusCode(), new SecurityContextLogoutHandler());
+    LogoutFilter logoutFilter = new LogoutFilter(new LogoutSuccessHandlerReturningOkHttpStatusCode(),
+        new SecurityContextLogoutHandler());
 
     // configure logout for rest logouts
     logoutFilter.setLogoutRequestMatcher(new AntPathRequestMatcher("/services/rest/logout"));
@@ -116,8 +116,8 @@ public abstract class BaseWebSecurityConfig extends WebSecurityConfigurerAdapter
    */
   protected JsonUsernamePasswordAuthenticationFilter getSimpleRestAuthenticationFilter() throws Exception {
 
-    JsonUsernamePasswordAuthenticationFilter jsonFilter =
-        new JsonUsernamePasswordAuthenticationFilter(new AntPathRequestMatcher("/services/rest/login"));
+    JsonUsernamePasswordAuthenticationFilter jsonFilter = new JsonUsernamePasswordAuthenticationFilter(
+        new AntPathRequestMatcher("/services/rest/login"));
     jsonFilter.setPasswordParameter("j_password");
     jsonFilter.setUsernameParameter("j_username");
     jsonFilter.setAuthenticationManager(authenticationManager());
@@ -133,9 +133,7 @@ public abstract class BaseWebSecurityConfig extends WebSecurityConfigurerAdapter
   @Inject
   public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
 
-    auth.inMemoryAuthentication().withUser("waiter").password("waiter").roles("Waiter").and().withUser("cook")
-        .password("cook").roles("Cook").and().withUser("barkeeper").password("barkeeper").roles("Barkeeper").and()
-        .withUser("chief").password("chief").roles("Chief");
+    auth.inMemoryAuthentication().withUser("user").password("user").roles("DummyRole");
   }
 
 }

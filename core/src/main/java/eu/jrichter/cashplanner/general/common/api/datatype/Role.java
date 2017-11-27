@@ -4,7 +4,7 @@ import java.security.Principal;
 
 public enum Role implements Principal {
 
-  DUMMY_ROLE("Dummy Role");
+  DUMMY_ROLE("DummyRole");
 
   private final String name;
 

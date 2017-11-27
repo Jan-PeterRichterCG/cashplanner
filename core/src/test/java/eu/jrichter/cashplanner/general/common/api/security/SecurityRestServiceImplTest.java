@@ -46,8 +46,8 @@ public class SecurityRestServiceImplTest extends AbstractRestServiceTest {
   @DirtiesContext
   public void testLogin() {
 
-    String userName = "waiter";
-    String tmpPassword = "waiter";
+    String userName = "user";
+    String tmpPassword = "user";
 
     ResponseEntity<String> postResponse = login(userName, tmpPassword);
     LOG.debug("Body: " + postResponse.getBody());
@@ -63,8 +63,8 @@ public class SecurityRestServiceImplTest extends AbstractRestServiceTest {
   @DirtiesContext
   public void testGetCurrentUser() {
 
-    String userName = "waiter";
-    String tmpPassword = "waiter";
+    String userName = "user";
+    String tmpPassword = "user";
     String tmpUrl = "http://localhost:" + String.valueOf(this.port) + "/services/rest/security/v1/currentuser";
 
     ResponseEntity<String> loginResponse = login(userName, tmpPassword);
@@ -94,8 +94,8 @@ public class SecurityRestServiceImplTest extends AbstractRestServiceTest {
   @DirtiesContext
   public void testGetCsrfToken() {
 
-    String userName = "waiter";
-    String tmpPassword = "waiter";
+    String userName = "user";
+    String tmpPassword = "user";
 
     ResponseEntity<String> loginResponse = login(userName, tmpPassword);
 
