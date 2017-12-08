@@ -2,7 +2,6 @@ package eu.jrichter.cashplanner.general.dataaccess.impl.config;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +16,9 @@ import eu.jrichter.cashplanner.general.dataaccess.base.DatabaseMigrator;
 @Configuration
 public class BeansJpaConfig {
 
-  @Inject
-  private EntityManagerFactory entityManagerFactory;
-
+  /*
+   * @Inject private EntityManagerFactory entityManagerFactory; // unused
+   */
   @Inject
   private DataSource appDataSource;
 
@@ -32,6 +31,7 @@ public class BeansJpaConfig {
   @Value("${database.migration.clean}")
   private Boolean clean;
 
+  @SuppressWarnings("javadoc")
   @Bean
   public DatabaseMigrator getFlyway() {
 
@@ -44,6 +44,7 @@ public class BeansJpaConfig {
 
   }
 
+  @SuppressWarnings("javadoc")
   @PostConstruct
   public void migrate() {
 

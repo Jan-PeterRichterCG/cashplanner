@@ -54,7 +54,7 @@ public class RestTestClientBuilder {
    * @param login the {@code String} used as for authentcation.
    * @return a proxy of the specified type.
    */
-  public <T extends RestService> T build(Class<T> clazz, String login) {
+  public <T extends RestService> T build(Class<T> clazz, @SuppressWarnings("hiding") String login) {
 
     return this.build(clazz, login, login, createRestServiceUrl());
   }

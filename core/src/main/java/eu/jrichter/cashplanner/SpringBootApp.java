@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import io.oasp.module.jpa.dataaccess.api.AdvancedRevisionEntity;
 
 //@SpringBootApplication(exclude = { SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class })
+@SuppressWarnings("javadoc")
 @SpringBootApplication(exclude = { EndpointAutoConfiguration.class })
 @EntityScan(basePackages = { "eu.jrichter.cashplanner" }, basePackageClasses = { AdvancedRevisionEntity.class })
 @EnableGlobalMethodSecurity(jsr250Enabled = true)

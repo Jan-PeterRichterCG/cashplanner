@@ -53,7 +53,8 @@ import io.oasp.module.security.common.base.accesscontrol.AccessControlGrantedAut
  * </pre>
  *
  * <br/>
- * For another example, have a look at {@link BaseWebSecurityConfig}.
+ * For another example, have a look at
+ * {@link eu.jrichter.cashplanner.general.service.impl.config.BaseWebSecurityConfig}.
  */
 @Named
 public class BaseUserDetailsService implements UserDetailsService {

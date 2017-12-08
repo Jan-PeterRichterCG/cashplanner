@@ -11,7 +11,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import eu.jrichter.cashplanner.general.service.impl.config.BaseWebSecurityConfig;
 import io.oasp.module.basic.common.api.config.SpringProfileConstants;
 
 /**
@@ -42,12 +41,13 @@ public class TestWebSecurityConfig extends BaseWebSecurityConfig {
     LOG.debug("used non static class");
   }
 
+  @SuppressWarnings("javadoc")
   @Bean
   protected BasicAuthenticationFilter basicAuthenticationFilter() throws Exception {
 
     AuthenticationEntryPoint authenticationEntryPoint = new BasicAuthenticationEntryPoint();
-    BasicAuthenticationFilter basicAuthenticationFilter =
-        new BasicAuthenticationFilter(authenticationManagerBean(), authenticationEntryPoint);
+    BasicAuthenticationFilter basicAuthenticationFilter = new BasicAuthenticationFilter(authenticationManagerBean(),
+        authenticationEntryPoint);
     LOG.debug("created basicAuthenticationFilter");
     return basicAuthenticationFilter;
   }

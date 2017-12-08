@@ -6,12 +6,10 @@ import java.util.Collection;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
-import javax.xml.ws.Endpoint;
 
 import org.apache.cxf.bus.spring.SpringBus;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxws.EndpointImpl;
 import org.apache.cxf.transport.servlet.CXFServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ import org.springframework.ws.config.annotation.EnableWs;
 import org.springframework.ws.config.annotation.WsConfigurerAdapter;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-
 
 import io.oasp.module.rest.service.impl.RestServiceExceptionFacade;
 import io.oasp.module.rest.service.impl.json.ObjectMapperFactory;
@@ -44,14 +41,19 @@ public class ServiceConfig extends WsConfigurerAdapter {
   /** The services "folder" of an URL. */
   public static final String URL_FOLDER_SERVICES = "services";
 
+  @SuppressWarnings("javadoc")
   public static final String URL_PATH_SERVICES = "/" + URL_FOLDER_SERVICES;
 
+  @SuppressWarnings("javadoc")
   public static final String URL_FOLDER_REST = "/rest";
 
+  @SuppressWarnings("javadoc")
   public static final String URL_FOLDER_WEB_SERVICES = "/ws";
 
+  @SuppressWarnings("javadoc")
   public static final String URL_PATH_REST_SERVICES = URL_PATH_SERVICES + "/" + URL_FOLDER_REST;
 
+  @SuppressWarnings("javadoc")
   public static final String URL_PATH_WEB_SERVICES = URL_PATH_SERVICES + "/" + URL_FOLDER_WEB_SERVICES;
 
   @Value("${security.expose.error.details}")
@@ -63,18 +65,21 @@ public class ServiceConfig extends WsConfigurerAdapter {
   @Inject
   private ObjectMapperFactory objectMapperFactory;
 
+  @SuppressWarnings("javadoc")
   @Bean(name = "cxf")
   public SpringBus springBus() {
 
     return new SpringBus();
   }
 
+  @SuppressWarnings("javadoc")
   @Bean
   public JacksonJsonProvider jacksonJsonProvider() {
 
     return new JacksonJsonProvider(this.objectMapperFactory.createInstance());
   }
 
+  @SuppressWarnings("javadoc")
   @Bean
   public ServletRegistrationBean servletRegistrationBean() {
 
@@ -83,6 +88,7 @@ public class ServiceConfig extends WsConfigurerAdapter {
     return servletRegistration;
   }
 
+  @SuppressWarnings("javadoc")
   @Bean
   public Server jaxRsServer() {
 
@@ -110,6 +116,7 @@ public class ServiceConfig extends WsConfigurerAdapter {
     return this.applicationContext.getBeansWithAnnotation(Path.class).values();
   }
 
+  @SuppressWarnings("javadoc")
   @Bean
   public RestServiceExceptionFacade restServiceExceptionFacade() {
 
@@ -118,5 +125,4 @@ public class ServiceConfig extends WsConfigurerAdapter {
     return exceptionFacade;
   }
 
-  
 }

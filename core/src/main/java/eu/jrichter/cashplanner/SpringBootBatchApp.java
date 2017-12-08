@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 import io.oasp.module.jpa.dataaccess.api.AdvancedRevisionEntity;
 
+@SuppressWarnings("javadoc")
 @SpringBootApplication(exclude = { EndpointAutoConfiguration.class, SecurityAutoConfiguration.class,
 SecurityFilterAutoConfiguration.class, })
 @EntityScan(basePackages = { "eu.jrichter.cashplanner" }, basePackageClasses = { AdvancedRevisionEntity.class })

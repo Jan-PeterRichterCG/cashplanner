@@ -38,6 +38,7 @@ public abstract class AbstractSpringBatchIntegrationTest extends ComponentTest {
   /** scripts for all tests db setup */
   private static final String ALL_TESTS_DB_SETUP_DIR = "classpath:AllSpringBatchApplicationTests/setup/db";
 
+  @SuppressWarnings("javadoc")
   protected static void login(String login, String password, String... permissions) {
 
     Set<String> groups = new HashSet<>(Arrays.asList(permissions));
@@ -50,6 +51,7 @@ public abstract class AbstractSpringBatchIntegrationTest extends ComponentTest {
         new UsernamePasswordAuthenticationToken(new UserData(login, password, authorities), password));
   }
 
+  @SuppressWarnings("javadoc")
   public static void logout() {
 
     SecurityContextHolder.getContext().setAuthentication(null);
