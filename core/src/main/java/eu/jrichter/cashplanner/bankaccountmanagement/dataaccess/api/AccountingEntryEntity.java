@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.javamoney.moneta.Money;
 
@@ -67,6 +68,7 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
   }
 
   @Override
+  @Transient // as long as we have no mapping for Money
   public Money getAmount() {
 
     return this.amount;

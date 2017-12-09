@@ -18,4 +18,5 @@ public interface AccountingEntryDao extends ApplicationDao<AccountingEntryEntity
    * @return the {@link PaginatedListTo} with the matching {@link AccountingEntryEntity} objects.
    */
   PaginatedListTo<AccountingEntryEntity> findAccountingEntrys(AccountingEntrySearchCriteriaTo criteria);
+
 }

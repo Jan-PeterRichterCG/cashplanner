@@ -33,7 +33,7 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
 
   public LocalDate getDateOfBookkeepingEntry() {
 
-    return dateOfBookkeepingEntry;
+    return this.dateOfBookkeepingEntry;
   }
 
   public void setDateOfBookkeepingEntry(LocalDate dateOfBookkeepingEntry) {
@@ -43,7 +43,7 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
 
   public LocalDate getValueDate() {
 
-    return valueDate;
+    return this.valueDate;
   }
 
   public void setValueDate(LocalDate valueDate) {
@@ -53,7 +53,7 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
 
   public String getPostingText() {
 
-    return postingText;
+    return this.postingText;
   }
 
   public void setPostingText(String postingText) {
@@ -63,7 +63,7 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
 
   public Money getAmount() {
 
-    return amount;
+    return this.amount;
   }
 
   public void setAmount(Money amount) {

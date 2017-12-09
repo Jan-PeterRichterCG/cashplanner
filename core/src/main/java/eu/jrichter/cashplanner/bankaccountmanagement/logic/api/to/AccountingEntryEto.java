@@ -25,7 +25,7 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
   @Override
   public LocalDate getDateOfBookkeepingEntry() {
 
-    return dateOfBookkeepingEntry;
+    return this.dateOfBookkeepingEntry;
   }
 
   @Override
@@ -37,7 +37,7 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
   @Override
   public LocalDate getValueDate() {
 
-    return valueDate;
+    return this.valueDate;
   }
 
   @Override
@@ -49,7 +49,7 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
   @Override
   public String getPostingText() {
 
-    return postingText;
+    return this.postingText;
   }
 
   @Override
@@ -61,7 +61,7 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
   @Override
   public Money getAmount() {
 
-    return amount;
+    return this.amount;
   }
 
   @Override

@@ -9,9 +9,9 @@ CREATE SEQUENCE HIBERNATE_SEQUENCE START WITH 1000000;
 CREATE TABLE AccountingEntry(
   id BIGINT NOT NULL AUTO_INCREMENT,
   modificationCounter INTEGER NOT NULL,
-  dateOfBookkeepingEntry DATE, -- this may or may not work with JSR310 LocalDate
-  valueDate DATE, -- this may or may not work with JSR310 LocalDate
-  postingText VARCHAR(255),
+  dateOfBookkeepingEntry DATE,
+  ValueDate DATE,
+  PostingText VARCHAR(255),
   CONSTRAINT PK_AccountEntry PRIMARY KEY(id)
 );
 
