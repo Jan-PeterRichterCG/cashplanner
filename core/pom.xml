@@ -228,6 +228,12 @@
       <artifactId>spring-boot-starter-web-services</artifactId>
     </dependency>
 
+    <!-- needed (at least) for h2file database - see https://stackoverflow.com/questions/37903105/how-to-configure-spring-boot-to-use-file-based-h2-database -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>com.mysema.querydsl</groupId>
       <artifactId>querydsl-apt</artifactId>
@@ -276,10 +282,10 @@
       </dependency>
     -->
 
-  <dependency>
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-java8</artifactId>
-  </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-java8</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.javamoney</groupId>
       <artifactId>moneta</artifactId>
