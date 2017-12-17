@@ -286,11 +286,12 @@
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-java8</artifactId>
     </dependency>
-    <dependency>
+    <dependency> <!-- for JSR354 Money Data Types -->
       <groupId>org.javamoney</groupId>
       <artifactId>moneta</artifactId>
       <version>1.1</version><!--$NO-MVN-MAN-VER$ -->
     </dependency>
+
   </dependencies>
 
   <profiles>

@@ -1,5 +1,6 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.javamoney.moneta.Money;
@@ -20,7 +21,11 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
 
   private String postingText;
 
-  private Money amount;
+  private BigDecimal amount;
+
+  private String currency;
+
+  private Money moneyAmount;
 
   @Override
   public LocalDate getDateOfBookkeepingEntry() {
@@ -59,15 +64,51 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
   }
 
   @Override
-  public Money getAmount() {
+  public BigDecimal getAmount() {
 
     return this.amount;
   }
 
   @Override
-  public void setAmount(Money amount) {
+  public void setAmount(BigDecimal amount) {
 
     this.amount = amount;
+    // if currency has already been set for this entity, copy amount and currency to the moneyAmount;
+    if (null != this.currency) {
+      this.moneyAmount = Money.of(amount, this.currency);
+    }
+
+  }
+
+  @Override
+  public String getCurrency() {
+
+    return this.currency;
+  }
+
+  @Override
+  public void setCurrency(String currency) {
+
+    this.currency = currency;
+    // if amount has already been set for this entity, copy amount and currency to the moneyAmount;
+    if (null != this.amount) {
+      this.moneyAmount = Money.of(this.amount, currency);
+    }
+
+  }
+
+  @Override
+  public Money getMoneyAmount() {
+
+    return this.moneyAmount;
+  }
+
+  @Override
+  public void setMoneyAmount(Money moneyAmount) {
+
+    this.moneyAmount = moneyAmount;
+    this.amount = moneyAmount.getNumberStripped();
+    this.currency = moneyAmount.getCurrency().getCurrencyCode();
   }
 
   @Override
@@ -79,6 +120,8 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
     result = prime * result + ((this.valueDate == null) ? 0 : this.valueDate.hashCode());
     result = prime * result + ((this.postingText == null) ? 0 : this.postingText.hashCode());
     result = prime * result + ((this.amount == null) ? 0 : this.amount.hashCode());
+    result = prime * result + ((this.currency == null) ? 0 : this.currency.hashCode());
+    result = prime * result + ((this.moneyAmount == null) ? 0 : this.moneyAmount.hashCode());
     return result;
   }
 
@@ -122,6 +165,20 @@ public class AccountingEntryEto extends AbstractEto implements AccountingEntry {
         return false;
       }
     } else if (!this.amount.equals(other.amount)) {
+      return false;
+    }
+    if (this.currency == null) {
+      if (other.currency != null) {
+        return false;
+      }
+    } else if (!this.currency.equals(other.currency)) {
+      return false;
+    }
+    if (this.moneyAmount == null) {
+      if (other.moneyAmount != null) {
+        return false;
+      }
+    } else if (!this.moneyAmount.equals(other.moneyAmount)) {
       return false;
     }
     return true;

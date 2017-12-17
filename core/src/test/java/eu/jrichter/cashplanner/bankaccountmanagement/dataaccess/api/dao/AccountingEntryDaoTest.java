@@ -9,6 +9,8 @@ import javax.transaction.Transactional;
 
 import org.javamoney.moneta.Money;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.AccountingEntryEntity;
 import eu.jrichter.cashplanner.general.common.AbstractApplicationComponentTest;
@@ -20,6 +22,8 @@ import eu.jrichter.cashplanner.general.common.AbstractApplicationComponentTest;
  * @since 0.0.1
  */
 public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AccountingEntryDaoTest.class);
 
   @Inject
   AccountingEntryDao accountingEntryDao;
@@ -36,7 +40,7 @@ public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
     entity.setDateOfBookkeepingEntry(LocalDate.of(2017, 12, 9));
     entity.setValueDate(LocalDate.of(2017, 12, 10));
     entity.setPostingText("Testbuchung");
-    entity.setAmount(Money.of(BigDecimal.valueOf(420815), Monetary.getCurrency("EUR")));
+    entity.setMoneyAmount(Money.of(BigDecimal.valueOf(-420815, 2), Monetary.getCurrency("EUR")));
 
     AccountingEntryEntity entitySaved = this.accountingEntryDao.save(entity);
 
@@ -47,7 +51,9 @@ public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
     assertThat(retrievedEntity.getDateOfBookkeepingEntry()).isEqualTo(entity.getDateOfBookkeepingEntry());
     assertThat(retrievedEntity.getValueDate()).isEqualTo(entity.getValueDate());
     assertThat(retrievedEntity.getPostingText()).isEqualTo(entity.getPostingText());
-    assertThat(retrievedEntity.getAmount()).isEqualTo(entity.getAmount()); // should fail due to @Transient but doesn't
-                                                                           // because of caching within Hibernate
+    assertThat(retrievedEntity.getAmount()).isEqualTo(entity.getAmount());
+
+    LOG.info("Entity saved: " + entitySaved.toString());
+
   }
 }

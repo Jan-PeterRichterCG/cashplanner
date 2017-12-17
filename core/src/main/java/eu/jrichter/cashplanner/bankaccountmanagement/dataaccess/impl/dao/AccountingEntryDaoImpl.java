@@ -1,10 +1,9 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.impl.dao;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import javax.inject.Named;
-
-import org.javamoney.moneta.Money;
 
 import com.mysema.query.alias.Alias;
 import com.mysema.query.jpa.impl.JPAQuery;
@@ -55,10 +54,19 @@ public class AccountingEntryDaoImpl extends ApplicationDaoImpl<AccountingEntryEn
     if (postingText != null) {
       query.where(Alias.$(accountingentry.getPostingText()).eq(postingText));
     }
-    Money amount = criteria.getAmount();
+    BigDecimal amount = criteria.getAmount();
     if (amount != null) {
       query.where(Alias.$(accountingentry.getAmount()).eq(amount));
     }
+    String currency = criteria.getCurrency();
+    if (currency != null) {
+      query.where(Alias.$(accountingentry.getCurrency()).eq(currency));
+    }
+    // searching for MoneyAmount will not work since it is @Transient
+    // Money moneyAmount = criteria.getMoneyAmount();
+    // if (moneyAmount != null) {
+    // query.where(Alias.$(accountingentry.getMoneyAmount()).eq(moneyAmount));
+    // }
     return findPaginated(criteria, query, alias);
   }
 

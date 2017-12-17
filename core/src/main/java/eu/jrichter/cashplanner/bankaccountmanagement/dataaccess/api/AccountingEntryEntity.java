@@ -1,5 +1,6 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
@@ -29,7 +30,11 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
 
   private String postingText;
 
-  private Money amount;
+  private BigDecimal amount;
+
+  private String currency;
+
+  private Money moneyAmount;
 
   @Override
   public LocalDate getDateOfBookkeepingEntry() {
@@ -68,16 +73,76 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
   }
 
   @Override
-  @Transient // as long as we have no mapping for Money
-  public Money getAmount() {
+  public BigDecimal getAmount() {
 
     return this.amount;
   }
 
   @Override
-  public void setAmount(Money amount) {
+  public void setAmount(BigDecimal amount) {
 
     this.amount = amount;
+    // if currency has already been set for this entity, copy amount and currency to the transient moneyAmount;
+    if (null != this.currency) {
+      this.moneyAmount = Money.of(amount, this.currency);
+    }
+  }
+
+  @Override
+  public String getCurrency() {
+
+    return this.currency;
+  }
+
+  @Override
+  public void setCurrency(String currency) {
+
+    this.currency = currency;
+    // if amount has already been set for this entity, copy amount and currency to the transient moneyAmount;
+    if (null != this.amount) {
+      this.moneyAmount = Money.of(this.amount, currency);
+    }
+
+  }
+
+  @Override
+  @Transient // we persist the amount and currency but leave the (redundant) moneyAmount transient
+  public Money getMoneyAmount() {
+
+    return this.moneyAmount;
+  }
+
+  @Override
+  public void setMoneyAmount(Money moneyAmount) {
+
+    this.moneyAmount = moneyAmount;
+    this.amount = moneyAmount.getNumberStripped();
+    this.currency = moneyAmount.getCurrency().getCurrencyCode();
+  }
+
+  @Override
+  public String toString() {
+
+    StringBuffer result = new StringBuffer();
+
+    result.append("[");
+    result.append("ID: ");
+    result.append(getId());
+    result.append(", Date of Bookkeeping: ");
+    result.append(this.dateOfBookkeepingEntry);
+    result.append(", ValueDate: ");
+    result.append(this.valueDate);
+    result.append(", PostingText: ");
+    result.append(this.postingText);
+    result.append(", Amount/Currency: ");
+    result.append(this.amount);
+    result.append(" ");
+    result.append(this.currency);
+    result.append(", MoneyAmount: ");
+    result.append(this.moneyAmount);
+    result.append("]");
+
+    return result.toString();
   }
 
 }

@@ -45,9 +45,11 @@ public class TestServiceImpl extends AbstractUc implements TestService {
     entity.setDateOfBookkeepingEntry(LocalDate.now());
     entity.setValueDate(LocalDate.of(2017, 12, 15));
     entity.setPostingText("Test entry");
-    entity.setAmount(Money.of(BigDecimal.valueOf(420815), Monetary.getCurrency("EUR")));
+    entity.setMoneyAmount(Money.of(BigDecimal.valueOf(-47110815, 2), Monetary.getCurrency("EUR")));
 
     entity = this.accountingEntryDao.save(entity);
+
+    LOG.info("Entity saved: " + entity.toString());
 
     return getBeanMapper().map(entity, AccountingEntryEto.class);
   }
