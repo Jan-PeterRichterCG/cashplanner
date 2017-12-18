@@ -2,11 +2,10 @@ package eu.jrichter.cashplanner.bankaccountmanagement.common.api;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import org.javamoney.moneta.Money;
 
 import eu.jrichter.cashplanner.general.common.api.ApplicationEntity;
 
@@ -14,10 +13,6 @@ import eu.jrichter.cashplanner.general.common.api.ApplicationEntity;
  * This interface represents an entry in a banking account, i.e. an atomic and (from a business perspective) immutable
  * financial transaction. An accounting entry can also be seen as a booking that adds or subtracts a monetary amount
  * to/from an account.
- *
- * The monetary amount is available as a {@link BigDecimal} and a {@link String} as well as a {@link Money} object.
- * Setting either will result in setting the other.
- *
  *
  * @author jrichter
  * @since 0.0.1
@@ -70,27 +65,14 @@ public interface AccountingEntry extends ApplicationEntity {
   public void setAmount(BigDecimal amount);
 
   /**
-   * @return the currency as an ISO 4217 code
+   * @return the currency
    */
   @NotNull
-  @Size(max = 3)
-  public String getCurrency();
+  public Currency getCurrency();
 
   /**
-   * @param currency new value of {@link #getCurrency} as an ISO 4217 code
+   * @param currency new value of {@link #getCurrency}
    */
-  public void setCurrency(String currency);
-
-  /**
-   * @return the amount of the account entry as a JSR 354 Money object. Debit account entries are represented by a
-   *         negative amount.
-   */
-  @NotNull
-  public Money getMoneyAmount();
-
-  /**
-   * @param moneyAmount new value of {@link #getMoneyAmount}
-   */
-  public void setMoneyAmount(Money moneyAmount);
+  public void setCurrency(Currency currency);
 
 }

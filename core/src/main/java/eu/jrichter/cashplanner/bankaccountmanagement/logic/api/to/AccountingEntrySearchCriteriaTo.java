@@ -2,8 +2,7 @@ package eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import org.javamoney.moneta.Money;
+import java.util.Currency;
 
 import io.oasp.module.jpa.common.api.to.SearchCriteriaTo;
 
@@ -24,9 +23,7 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
 
   private BigDecimal amount;
 
-  private String currency;
-
-  private Money moneyAmount;
+  private Currency currency;
 
   /**
    * The constructor.
@@ -76,25 +73,14 @@ public class AccountingEntrySearchCriteriaTo extends SearchCriteriaTo {
     this.amount = amount;
   }
 
-  public String getCurrency() {
+  public Currency getCurrency() {
 
     return this.currency;
   }
 
-  public void setCurrency(String currency) {
+  public void setCurrency(Currency currency) {
 
     this.currency = currency;
   }
-
-  // searching for MoneyAmount will probably not work since this field is @Transient
-  // public Money getMoneyAmount() {
-  //
-  // return moneyAmount;
-  // }
-  //
-  // public void setMoneyAmount(Money moneyAmount) {
-  //
-  // this.moneyAmount = moneyAmount;
-  // }
 
 }

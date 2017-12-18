@@ -2,13 +2,12 @@ package eu.jrichter.cashplanner.bankaccountmanagement.service.impl.rest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.money.Monetary;
 import javax.transaction.Transactional;
 
-import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,8 @@ public class TestServiceImpl extends AbstractUc implements TestService {
     entity.setDateOfBookkeepingEntry(LocalDate.now());
     entity.setValueDate(LocalDate.of(2017, 12, 15));
     entity.setPostingText("Test entry");
-    entity.setMoneyAmount(Money.of(BigDecimal.valueOf(-47110815, 2), Monetary.getCurrency("EUR")));
+    entity.setAmount(BigDecimal.valueOf(-47110815, 2));
+    entity.setCurrency(Currency.getInstance("EUR"));
 
     entity = this.accountingEntryDao.save(entity);
 

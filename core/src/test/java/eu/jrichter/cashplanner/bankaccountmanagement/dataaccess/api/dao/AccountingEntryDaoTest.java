@@ -2,12 +2,11 @@ package eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.dao;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 
 import javax.inject.Inject;
-import javax.money.Monetary;
 import javax.transaction.Transactional;
 
-import org.javamoney.moneta.Money;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,8 @@ public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
     entity.setDateOfBookkeepingEntry(LocalDate.of(2017, 12, 9));
     entity.setValueDate(LocalDate.of(2017, 12, 10));
     entity.setPostingText("Testbuchung");
-    entity.setMoneyAmount(Money.of(BigDecimal.valueOf(-420815, 2), Monetary.getCurrency("EUR")));
+    entity.setAmount(BigDecimal.valueOf(-420815, 2));
+    entity.setCurrency(Currency.getInstance("EUR"));
 
     AccountingEntryEntity entitySaved = this.accountingEntryDao.save(entity);
 
@@ -52,6 +52,7 @@ public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
     assertThat(retrievedEntity.getValueDate()).isEqualTo(entity.getValueDate());
     assertThat(retrievedEntity.getPostingText()).isEqualTo(entity.getPostingText());
     assertThat(retrievedEntity.getAmount()).isEqualTo(entity.getAmount());
+    assertThat(retrievedEntity.getCurrency()).isEqualTo(entity.getCurrency());
 
     LOG.info("Entity saved: " + entitySaved.toString());
 

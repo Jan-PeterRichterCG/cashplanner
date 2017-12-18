@@ -2,6 +2,7 @@ package eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.impl.dao;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 
 import javax.inject.Named;
 
@@ -58,15 +59,10 @@ public class AccountingEntryDaoImpl extends ApplicationDaoImpl<AccountingEntryEn
     if (amount != null) {
       query.where(Alias.$(accountingentry.getAmount()).eq(amount));
     }
-    String currency = criteria.getCurrency();
+    Currency currency = criteria.getCurrency();
     if (currency != null) {
       query.where(Alias.$(accountingentry.getCurrency()).eq(currency));
     }
-    // searching for MoneyAmount will not work since it is @Transient
-    // Money moneyAmount = criteria.getMoneyAmount();
-    // if (moneyAmount != null) {
-    // query.where(Alias.$(accountingentry.getMoneyAmount()).eq(moneyAmount));
-    // }
     return findPaginated(criteria, query, alias);
   }
 

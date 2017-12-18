@@ -2,12 +2,10 @@ package eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Currency;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.javamoney.moneta.Money;
 
 import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.general.dataaccess.api.ApplicationPersistenceEntity;
@@ -32,9 +30,7 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
 
   private BigDecimal amount;
 
-  private String currency;
-
-  private Money moneyAmount;
+  private Currency currency;
 
   @Override
   public LocalDate getDateOfBookkeepingEntry() {
@@ -82,42 +78,18 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
   public void setAmount(BigDecimal amount) {
 
     this.amount = amount;
-    // if currency has already been set for this entity, copy amount and currency to the transient moneyAmount;
-    if (null != this.currency) {
-      this.moneyAmount = Money.of(amount, this.currency);
-    }
   }
 
   @Override
-  public String getCurrency() {
+  public Currency getCurrency() {
 
     return this.currency;
   }
 
   @Override
-  public void setCurrency(String currency) {
+  public void setCurrency(Currency currency) {
 
     this.currency = currency;
-    // if amount has already been set for this entity, copy amount and currency to the transient moneyAmount;
-    if (null != this.amount) {
-      this.moneyAmount = Money.of(this.amount, currency);
-    }
-
-  }
-
-  @Override
-  @Transient // we persist the amount and currency but leave the (redundant) moneyAmount transient
-  public Money getMoneyAmount() {
-
-    return this.moneyAmount;
-  }
-
-  @Override
-  public void setMoneyAmount(Money moneyAmount) {
-
-    this.moneyAmount = moneyAmount;
-    this.amount = moneyAmount.getNumberStripped();
-    this.currency = moneyAmount.getCurrency().getCurrencyCode();
   }
 
   @Override
@@ -138,8 +110,6 @@ public class AccountingEntryEntity extends ApplicationPersistenceEntity implemen
     result.append(this.amount);
     result.append(" ");
     result.append(this.currency);
-    result.append(", MoneyAmount: ");
-    result.append(this.moneyAmount);
     result.append("]");
 
     return result.toString();
