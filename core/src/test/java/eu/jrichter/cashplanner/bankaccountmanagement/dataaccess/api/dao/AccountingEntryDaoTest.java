@@ -72,7 +72,7 @@ public class AccountingEntryDaoTest extends AbstractApplicationComponentTest {
     criteria.setAmount(BigDecimal.valueOf(4299, 2));
     criteria.setCurrency(Currency.getInstance("EUR"));
     criteria.setDateOfBookkeepingEntry(LocalDate.of(2017, 12, 02));
-    criteria.setPostingText("Test MasterData 1");
+    criteria.setPostingText("Test Data 1");
     criteria.setValueDate(LocalDate.of(2017, 12, 01));
 
     List<AccountingEntryEntity> results = this.accountingEntryDao.findAccountingEntrys(criteria).getResult();
