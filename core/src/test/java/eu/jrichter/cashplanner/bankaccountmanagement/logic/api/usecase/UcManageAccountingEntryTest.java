@@ -1,22 +1,18 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.logic.api.usecase;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Currency;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.hamcrest.Matchers;
+import org.javatuples.Pair;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntrySearchCriteriaTo;
@@ -29,8 +25,6 @@ import eu.jrichter.cashplanner.general.common.AbstractApplicationComponentTest;
  * @since 0.0.1
  */
 public class UcManageAccountingEntryTest extends AbstractApplicationComponentTest {
-
-  private static final Logger LOG = LoggerFactory.getLogger(UcManageAccountingEntryTest.class);
 
   @Inject
   Bankaccountmanagement bankacountmanagement;
@@ -47,21 +41,45 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Test
   public void testImportAccountingEntriesEtosMustNotContainIds() throws IllegalArgumentException {
 
-    HashSet<AccountingEntry> accountingEntries = new HashSet<>();
-    accountingEntries.add(new AccountingEntryEto());
-    accountingEntries.add(new AccountingEntryEto());
-    accountingEntries.add(new AccountingEntryEto());
-    accountingEntries.add(new AccountingEntryEto());
     AccountingEntryEto eto = new AccountingEntryEto();
     eto.setId(4711l);
-    accountingEntries.add(eto);
-    accountingEntries.add(new AccountingEntryEto());
-    accountingEntries.add(new AccountingEntryEto());
 
     this.thrown.expect(IllegalArgumentException.class);
     this.thrown.expectMessage(Matchers.containsString("4711"));
-    this.bankacountmanagement.importAccountingEntries(accountingEntries, UcManageAccountingEntryAction.NONE);
+    this.bankacountmanagement.importAccountingEntry(eto, UcManageAccountingEntryAction.NONE);
     // never reached
+  }
+
+  private Pair<AccountingEntryEto, Integer> getExistingEntryWithIdSetToNullAndTotalNumberOfEntries() {
+
+    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
+    // just use empty search criteria to get all entities
+    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+
+    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
+
+    AccountingEntryEto entry = etos.get(0);
+    entry.setId(null);
+
+    return Pair.with(entry, etos.size());
+  }
+
+  private AccountingEntryEto importAccountingEntryWithActionAndAssert(AccountingEntryEto ae,
+      UcManageAccountingEntryAction action, boolean shouldReturnNull, Integer newTotalNumberOfEntries) {
+
+    AccountingEntryEto importedAccountingEntry = this.bankacountmanagement.importAccountingEntry(ae, action);
+    if (shouldReturnNull)
+      assertThat(importedAccountingEntry).isNull(); // indicating that no new entry was written
+    else
+      assertThat(importedAccountingEntry).isNotNull(); // indicating that a new/updated entry was written
+
+    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
+    // just use empty search criteria to get all entities
+    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+
+    assertThat(etos.size()).isEqualTo(newTotalNumberOfEntries);
+
+    return importedAccountingEntry;
   }
 
   /**
@@ -71,23 +89,10 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesDoesNotImportExistingEntries() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntry entry : etos) {
-      entry.setId(null); // must be null to adhere to the contract
-    }
-
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(0); // indicating that no new entry was written
-
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size()); // there should not be any new entry in the database
+    importAccountingEntryWithActionAndAssert(pair.getValue0(), UcManageAccountingEntryAction.UPDATE_VALUE_DATE, true,
+        pair.getValue1());
   }
 
   /**
@@ -97,29 +102,15 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesUpdatesOnValueDate() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     etoToUpdate.setValueDate(etoToUpdate.getValueDate().plusDays(1));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
+    AccountingEntryEto importedAccountingEntry = importAccountingEntryWithActionAndAssert(etoToUpdate,
+        UcManageAccountingEntryAction.UPDATE_VALUE_DATE, false, pair.getValue1());
 
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size()); // there should not be any new entry in the database
-
-    Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
-    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
+    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(importedAccountingEntry.getId());
     assertThat(etoFound.getValueDate().isEqual(etoToUpdate.getValueDate()));
   }
 
@@ -131,26 +122,12 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesDoesNotUpdateOnValueDateIfActionIsNone() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     etoToUpdate.setValueDate(etoToUpdate.getValueDate().plusDays(1));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.NONE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(0); // indicating that no entry was written or updated
-
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size()); // there should not be any new entry in the database
+    importAccountingEntryWithActionAndAssert(etoToUpdate, UcManageAccountingEntryAction.NONE, true, pair.getValue1());
   }
 
   /**
@@ -160,29 +137,15 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesImportsOnDateOfBookkeepingEntry() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     etoToUpdate.setDateOfBookkeepingEntry(etoToUpdate.getDateOfBookkeepingEntry().plusDays(1));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
+    AccountingEntryEto importedAccountingEntry = importAccountingEntryWithActionAndAssert(etoToUpdate,
+        UcManageAccountingEntryAction.UPDATE_VALUE_DATE, false, pair.getValue1() + 1);
 
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size() + 1); // there should be one new entry in the database
-
-    Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
-    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
+    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(importedAccountingEntry.getId());
     assertThat(etoFound.getDateOfBookkeepingEntry().isEqual(etoToUpdate.getDateOfBookkeepingEntry()));
   }
 
@@ -193,29 +156,15 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesImportsOnPostingText() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     etoToUpdate.setPostingText(etoToUpdate.getPostingText().concat("foo"));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
+    AccountingEntryEto importedAccountingEntry = importAccountingEntryWithActionAndAssert(etoToUpdate,
+        UcManageAccountingEntryAction.UPDATE_VALUE_DATE, false, pair.getValue1() + 1);
 
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size() + 1); // there should be one new entry in the database
-
-    Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
-    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
+    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(importedAccountingEntry.getId());
     assertThat(etoFound.getPostingText()).isEqualTo(etoToUpdate.getPostingText());
   }
 
@@ -226,32 +175,18 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesImportsOnCurrency() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     if (etoToUpdate.getCurrency().equals(Currency.getInstance("EUR")))
       etoToUpdate.setCurrency(Currency.getInstance("USD"));
     else
       etoToUpdate.setCurrency(Currency.getInstance("EUR"));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
+    AccountingEntryEto importedAccountingEntry = importAccountingEntryWithActionAndAssert(etoToUpdate,
+        UcManageAccountingEntryAction.UPDATE_VALUE_DATE, false, pair.getValue1() + 1);
 
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size() + 1); // there should be one new entry in the database
-
-    Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
-    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
+    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(importedAccountingEntry.getId());
     assertThat(etoFound.getCurrency()).isEqualTo(etoToUpdate.getCurrency());
   }
 
@@ -262,29 +197,15 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Transactional
   public void testImportAccountingEntriesImportsOnAmount() {
 
-    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-    // just use empty search criteria to get all entities
-    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    Pair<AccountingEntryEto, Integer> pair = getExistingEntryWithIdSetToNullAndTotalNumberOfEntries();
 
-    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
-
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
-    }
-
-    AccountingEntryEto etoToUpdate = etos.get(0);
+    AccountingEntryEto etoToUpdate = pair.getValue0();
     etoToUpdate.setAmount(etoToUpdate.getAmount().add(BigDecimal.valueOf(1, 2)));
 
-    Collection<AccountingEntry> importedAccountingEntries;
-    importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
-        UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
-    assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
+    AccountingEntryEto importedAccountingEntry = importAccountingEntryWithActionAndAssert(etoToUpdate,
+        UcManageAccountingEntryAction.UPDATE_VALUE_DATE, false, pair.getValue1() + 1);
 
-    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
-    assertThat(etos2.size()).isEqualTo(etos.size() + 1); // there should be one new entry in the database
-
-    Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
-    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
+    AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(importedAccountingEntry.getId());
     assertThat(etoFound.getAmount()).isEqualTo(etoToUpdate.getAmount());
   }
 

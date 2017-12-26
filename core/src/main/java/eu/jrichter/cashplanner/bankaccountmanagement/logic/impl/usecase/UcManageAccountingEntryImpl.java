@@ -1,8 +1,5 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.logic.impl.usecase;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.AccountingEntryEntity;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.dao.AccountingEntryDao;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
@@ -65,71 +61,73 @@ public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc imple
   }
 
   @Override
-  public Collection<AccountingEntry> importAccountingEntries(Collection<? extends AccountingEntry> accountingEntries,
+  public AccountingEntryEto importAccountingEntry(AccountingEntryEto accountingEntry,
       UcManageAccountingEntryAction action) {
 
-    Objects.requireNonNull(accountingEntries, "accountingEntries");
+    // check whether the parameters are legal
+    Objects.requireNonNull(accountingEntry, "accountingEntry");
     Objects.requireNonNull(action, "action");
-    for (AccountingEntry entry : accountingEntries) {
-      if (null != entry.getId())
-        throw new IllegalArgumentException("Id field of AccountingEntryEto " + entry.toString() + " must be null!");
-    }
+    if (null != accountingEntry.getId())
+      throw new IllegalArgumentException(
+          "Id field of AccountingEntryEto " + accountingEntry.toString() + " must be null!");
 
     AccountingEntryDao accountingEntryDao = getAccountingEntryDao();
+    AccountingEntryEto result = null;
 
-    Collection<AccountingEntry> result = new HashSet<>();
+    // prepare criteria to search for a matching entity already in the database
+    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
+    criteria.setAmount(accountingEntry.getAmount());
+    criteria.setCurrency(accountingEntry.getCurrency());
+    criteria.setDateOfBookkeepingEntry(accountingEntry.getDateOfBookkeepingEntry());
+    criteria.setPostingText(accountingEntry.getPostingText());
 
-    for (AccountingEntry entry : accountingEntries) {
-      AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-      criteria.setAmount(entry.getAmount());
-      criteria.setCurrency(entry.getCurrency());
-      criteria.setDateOfBookkeepingEntry(entry.getDateOfBookkeepingEntry());
-      criteria.setPostingText(entry.getPostingText());
+    List<AccountingEntryEntity> existingAccountingEntries = accountingEntryDao.findAccountingEntrys(criteria)
+        .getResult();
 
-      List<AccountingEntryEntity> existingAccountingEntries = accountingEntryDao.findAccountingEntrys(criteria)
-          .getResult();
-      if (existingAccountingEntries.size() == 0) {
-        // no matching entity - save the new one
-        AccountingEntryEntity newAccountingEntryEntity = getBeanMapper().map(entry, AccountingEntryEntity.class);
-        newAccountingEntryEntity = accountingEntryDao.save(newAccountingEntryEntity);
-        entry.setId(newAccountingEntryEntity.getId());
-        result.add(entry);
-        LOG.debug("New AccountEntry written: " + newAccountingEntryEntity.toString());
-      } else {
-        if (existingAccountingEntries.size() > 1) {
-          // a rare case - create a WARN line in the log
-          StringBuffer logBuffer = new StringBuffer();
-          for (AccountingEntryEntity entity : existingAccountingEntries) {
-            logBuffer.append(entity.toString());
-            if (logBuffer.length() > 200)
-              break; // don't spam the log if there are too many matching entities
-          }
-          LOG.warn("More than one matching AccountEntries found (" + existingAccountingEntries.size() + " entities): "
-              + logBuffer);
+    if (existingAccountingEntries.size() == 0) {
+      // no matching entity - save the new one
+      AccountingEntryEntity newAccountingEntryEntity = getBeanMapper().map(accountingEntry,
+          AccountingEntryEntity.class);
+      newAccountingEntryEntity = accountingEntryDao.save(newAccountingEntryEntity);
+      accountingEntry.setId(newAccountingEntryEntity.getId());
+      LOG.debug("New AccountEntry written: " + newAccountingEntryEntity.toString());
+      result = accountingEntry;
+    } else {
+      if (existingAccountingEntries.size() > 1) {
+        // a rare case - create a WARN line in the log
+        StringBuffer logBuffer = new StringBuffer();
+        for (AccountingEntryEntity entity : existingAccountingEntries) {
+          logBuffer.append(entity.toString());
+          if (logBuffer.length() > 500)
+            break; // don't spam the log if there are too many matching entities
         }
-        /*
-         * we have no other choice than to take the fist one in the list even if the list contains more than one
-         * matching AccountEntry
-         */
-        AccountingEntryEntity persistentAccountingEntryEntity = existingAccountingEntries.get(0);
-        switch (action) {
-          case UPDATE_VALUE_DATE:
-            if (!persistentAccountingEntryEntity.getValueDate().equals(entry.getValueDate())) {
-              persistentAccountingEntryEntity.setValueDate(entry.getValueDate());
-              accountingEntryDao.save(persistentAccountingEntryEntity);
-              entry.setId(persistentAccountingEntryEntity.getId());
-              result.add(entry);
-              LOG.debug("AccountEntry updated: " + persistentAccountingEntryEntity.toString());
-            } else
-              LOG.debug("Account entry untouched (same value date): " + persistentAccountingEntryEntity.toString());
-            break;
-          case NONE:
-            // don't do anything
-            LOG.debug("Account entry untouched (no action): " + persistentAccountingEntryEntity.toString());
-            break;
-          default: // programming error
-            throw new RuntimeException("Panic: Unknown action " + action + " encountered.");
-        }
+        LOG.warn("More than one matching AccountEntries found (" + existingAccountingEntries.size() + " entities): "
+            + logBuffer);
+      }
+      /*
+       * we have no other choice than to take the fist one in the list even if the list contains more than one matching
+       * AccountEntry
+       */
+      AccountingEntryEntity persistentAccountingEntryEntity = existingAccountingEntries.get(0);
+      switch (action) {
+        case UPDATE_VALUE_DATE:
+          if (!persistentAccountingEntryEntity.getValueDate().equals(accountingEntry.getValueDate())) {
+            persistentAccountingEntryEntity.setValueDate(accountingEntry.getValueDate());
+            accountingEntryDao.save(persistentAccountingEntryEntity);
+            accountingEntry.setId(persistentAccountingEntryEntity.getId());
+            LOG.debug("AccountEntry updated: " + persistentAccountingEntryEntity.toString());
+            result = accountingEntry;
+          } else
+            LOG.debug("Account entry untouched (same value date): " + persistentAccountingEntryEntity.toString());
+          // result remains null
+          break;
+        case NONE:
+          // don't do anything
+          LOG.debug("Account entry untouched (no action): " + persistentAccountingEntryEntity.toString());
+          // result remains null
+          break;
+        default: // programming error
+          throw new RuntimeException("Panic: Unknown action " + action + " encountered.");
       }
     }
 
@@ -142,23 +140,20 @@ public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc imple
     AccountTransactionReportTo atr = this.bankintegration.readAccountTransactionReportFile(path);
 
     List<AccountTransaction> atl = atr.getAccountTransactions();
-    List<AccountingEntry> accountingEntries = new ArrayList<>();
 
     int result = 0;
     if (atl != null && !atl.isEmpty()) {
       for (AccountTransaction at : atl) {
         if (at.getMarker() == null || at.getMarker().equals("")) {
-          AccountingEntry ae = new AccountingEntryEto();
+          AccountingEntryEto ae = new AccountingEntryEto();
           ae.setAmount(at.getAmount());
           ae.setCurrency(at.getCurrency());
           ae.setPostingText(at.getPostingText());
           ae.setDateOfBookkeepingEntry(at.getDateOfBookkeepingEntry());
           ae.setValueDate(at.getValueDate());
-          accountingEntries.add(ae);
+          result += (importAccountingEntry(ae, UcManageAccountingEntryAction.UPDATE_VALUE_DATE) == null ? 0 : 1);
         }
       }
-
-      result = importAccountingEntries(accountingEntries, UcManageAccountingEntryAction.UPDATE_VALUE_DATE).size();
     }
 
     return result;

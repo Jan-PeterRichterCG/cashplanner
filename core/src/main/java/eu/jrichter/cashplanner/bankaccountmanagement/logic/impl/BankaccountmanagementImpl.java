@@ -1,11 +1,8 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.logic.impl;
 
-import java.util.Collection;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntrySearchCriteriaTo;
@@ -60,10 +57,10 @@ public class BankaccountmanagementImpl extends AbstractComponentFacade implement
   }
 
   @Override
-  public Collection<AccountingEntry> importAccountingEntries(Collection<? extends AccountingEntry> accountingEntires,
+  public AccountingEntryEto importAccountingEntry(AccountingEntryEto accountingEnty,
       UcManageAccountingEntryAction action) {
 
-    return this.ucManageAccountingEntry.importAccountingEntries(accountingEntires, action);
+    return this.ucManageAccountingEntry.importAccountingEntry(accountingEnty, action);
   }
 
   @Override
