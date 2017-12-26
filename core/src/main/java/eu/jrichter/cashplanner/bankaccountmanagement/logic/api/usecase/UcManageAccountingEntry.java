@@ -2,6 +2,7 @@ package eu.jrichter.cashplanner.bankaccountmanagement.logic.api.usecase;
 
 import java.util.Collection;
 
+import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.AccountingEntryEntity;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 
@@ -27,8 +28,9 @@ public interface UcManageAccountingEntry {
   AccountingEntryEto saveAccountingEntry(AccountingEntryEto accountingEntry);
 
   /**
-   * Imports a {@link Collection} of {@link AccountingEntryEto}s in the database in an (almost) idempotent way. A new
-   * {@link AccountingEntryEntity} is persisted only if there is no matching one already present in the database. Two
+   * Imports a {@link Collection} of {@link AccountingEntry}s in the database in an (almost) idempotent way. A new
+   * {@link AccountingEntryEntity} is persisted only if there is no matching one already present in the database.
+   * Therefore, the {@link AccountingEntry}s should be newly created Etos, not entities from the database. Two
    * AccountingEntries match if their postingTexts are equal AND their amount AND currency are equal AND their
    * date(s)OfBookkeepingEntry are equal.
    *
@@ -42,7 +44,20 @@ public interface UcManageAccountingEntry {
    *        present in the database
    * @return the Collection of imported or updated AccountEntires with their Ids set to the Ids in the database
    */
-  Collection<AccountingEntryEto> importAccountingEntries(Collection<AccountingEntryEto> accountingEntries,
+  Collection<AccountingEntry> importAccountingEntries(Collection<? extends AccountingEntry> accountingEntries,
       UcManageAccountingEntryAction action);
+
+  /**
+   * Imports account entries from an account transaction report given as a file into the database in an (almost)
+   * idempotent way using {@link #importAccountingEntries}. The UPDATE_VALUE_DATE is used to handle versions of
+   * transactions across files. Also, transactions that have the marker set to anything else than null or the empty
+   * string are not imported.
+   *
+   * Note: this method is a quick hack and will be replaced when a proper GUI with an upload functionality is built.
+   *
+   * @param path the path of the file to import
+   * @return the number of imported or updated AccountEntires
+   */
+  int importAccountingEntriesFromFile(String path);
 
 }

@@ -37,14 +37,14 @@ public class UcReadAccountTransactionReportImpl implements UcReadAccountTransact
   private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
   @Override
-  public AccountTransactionReportTo readAccountTransactionReportFile(String filename) {
+  public AccountTransactionReportTo readAccountTransactionReportFile(String path) {
 
     String data = "";
     try {
-      data = new Tika().parseToString(new File(filename));
+      data = new Tika().parseToString(new File(path));
     } catch (Exception e) {
       LOG.error("Reading the file resulted in an Exception: " + e.getMessage());
-      throw new ReadFileException(e, filename);
+      throw new ReadFileException(e, path);
     }
 
     LOG.debug("File read: " + data);

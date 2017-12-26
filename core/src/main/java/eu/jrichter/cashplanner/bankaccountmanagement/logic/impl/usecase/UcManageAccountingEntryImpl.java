@@ -1,10 +1,12 @@
 package eu.jrichter.cashplanner.bankaccountmanagement.logic.impl.usecase;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.slf4j.Logger;
@@ -12,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.AccountingEntryEntity;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.dao.AccountingEntryDao;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
@@ -19,6 +22,9 @@ import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntr
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.usecase.UcManageAccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.usecase.UcManageAccountingEntryAction;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.base.usecase.AbstractAccountingEntryUc;
+import eu.jrichter.cashplanner.bankintegration.common.api.AccountTransactionReport.AccountTransaction;
+import eu.jrichter.cashplanner.bankintegration.logic.api.Bankintegration;
+import eu.jrichter.cashplanner.bankintegration.logic.api.to.AccountTransactionReportTo;
 import eu.jrichter.cashplanner.general.logic.api.UseCase;
 
 /**
@@ -29,6 +35,9 @@ import eu.jrichter.cashplanner.general.logic.api.UseCase;
 @Validated
 @Transactional
 public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc implements UcManageAccountingEntry {
+
+  @Inject
+  Bankintegration bankintegration;
 
   /** Logger instance. */
   private static final Logger LOG = LoggerFactory.getLogger(UcManageAccountingEntryImpl.class);
@@ -56,35 +65,35 @@ public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc imple
   }
 
   @Override
-  public Collection<AccountingEntryEto> importAccountingEntries(Collection<AccountingEntryEto> accountingEntries,
+  public Collection<AccountingEntry> importAccountingEntries(Collection<? extends AccountingEntry> accountingEntries,
       UcManageAccountingEntryAction action) {
 
     Objects.requireNonNull(accountingEntries, "accountingEntries");
     Objects.requireNonNull(action, "action");
-    for (AccountingEntryEto eto : accountingEntries) {
-      if (null != eto.getId())
-        throw new IllegalArgumentException("Id field of AccountingEntryEto " + eto.toString() + " must be null!");
+    for (AccountingEntry entry : accountingEntries) {
+      if (null != entry.getId())
+        throw new IllegalArgumentException("Id field of AccountingEntryEto " + entry.toString() + " must be null!");
     }
 
     AccountingEntryDao accountingEntryDao = getAccountingEntryDao();
 
-    Collection<AccountingEntryEto> result = new HashSet<>();
+    Collection<AccountingEntry> result = new HashSet<>();
 
-    for (AccountingEntryEto eto : accountingEntries) {
+    for (AccountingEntry entry : accountingEntries) {
       AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
-      criteria.setAmount(eto.getAmount());
-      criteria.setCurrency(eto.getCurrency());
-      criteria.setDateOfBookkeepingEntry(eto.getDateOfBookkeepingEntry());
-      criteria.setPostingText(eto.getPostingText());
+      criteria.setAmount(entry.getAmount());
+      criteria.setCurrency(entry.getCurrency());
+      criteria.setDateOfBookkeepingEntry(entry.getDateOfBookkeepingEntry());
+      criteria.setPostingText(entry.getPostingText());
 
       List<AccountingEntryEntity> existingAccountingEntries = accountingEntryDao.findAccountingEntrys(criteria)
           .getResult();
       if (existingAccountingEntries.size() == 0) {
         // no matching entity - save the new one
-        AccountingEntryEntity newAccountingEntryEntity = getBeanMapper().map(eto, AccountingEntryEntity.class);
+        AccountingEntryEntity newAccountingEntryEntity = getBeanMapper().map(entry, AccountingEntryEntity.class);
         newAccountingEntryEntity = accountingEntryDao.save(newAccountingEntryEntity);
-        eto.setId(newAccountingEntryEntity.getId());
-        result.add(eto);
+        entry.setId(newAccountingEntryEntity.getId());
+        result.add(entry);
         LOG.debug("New AccountEntry written: " + newAccountingEntryEntity.toString());
       } else {
         if (existingAccountingEntries.size() > 1) {
@@ -105,11 +114,11 @@ public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc imple
         AccountingEntryEntity persistentAccountingEntryEntity = existingAccountingEntries.get(0);
         switch (action) {
           case UPDATE_VALUE_DATE:
-            if (!persistentAccountingEntryEntity.getValueDate().equals(eto.getValueDate())) {
-              persistentAccountingEntryEntity.setValueDate(eto.getValueDate());
+            if (!persistentAccountingEntryEntity.getValueDate().equals(entry.getValueDate())) {
+              persistentAccountingEntryEntity.setValueDate(entry.getValueDate());
               accountingEntryDao.save(persistentAccountingEntryEntity);
-              eto.setId(persistentAccountingEntryEntity.getId());
-              result.add(eto);
+              entry.setId(persistentAccountingEntryEntity.getId());
+              result.add(entry);
               LOG.debug("AccountEntry updated: " + persistentAccountingEntryEntity.toString());
             } else
               LOG.debug("Account entry untouched (same value date): " + persistentAccountingEntryEntity.toString());
@@ -122,6 +131,34 @@ public class UcManageAccountingEntryImpl extends AbstractAccountingEntryUc imple
             throw new RuntimeException("Panic: Unknown action " + action + " encountered.");
         }
       }
+    }
+
+    return result;
+  }
+
+  @Override
+  public int importAccountingEntriesFromFile(String path) {
+
+    AccountTransactionReportTo atr = this.bankintegration.readAccountTransactionReportFile(path);
+
+    List<AccountTransaction> atl = atr.getAccountTransactions();
+    List<AccountingEntry> accountingEntries = new ArrayList<>();
+
+    int result = 0;
+    if (atl != null && !atl.isEmpty()) {
+      for (AccountTransaction at : atl) {
+        if (at.getMarker() == null || at.getMarker().equals("")) {
+          AccountingEntry ae = new AccountingEntryEto();
+          ae.setAmount(at.getAmount());
+          ae.setCurrency(at.getCurrency());
+          ae.setPostingText(at.getPostingText());
+          ae.setDateOfBookkeepingEntry(at.getDateOfBookkeepingEntry());
+          ae.setValueDate(at.getValueDate());
+          accountingEntries.add(ae);
+        }
+      }
+
+      result = importAccountingEntries(accountingEntries, UcManageAccountingEntryAction.UPDATE_VALUE_DATE).size();
     }
 
     return result;

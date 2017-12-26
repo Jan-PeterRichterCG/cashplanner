@@ -58,8 +58,8 @@ public interface NlsBundleApplicationRoot extends NlsBundle {
    * @param filename is the filename used to read when the error occurred.
    * @return the {@link NlsMessage}.
    */
-  @NlsBundleMessage("The file {filename} could not be read!")
-  NlsMessage errorReadFile(@Named("filename") Object filename);
+  @NlsBundleMessage("The file {path} could not be read!")
+  NlsMessage errorReadFile(@Named("path") Object path);
 
   /**
    * @see eu.jrichter.cashplanner.bankintegration.common.api.exception.SyntaxErrorException

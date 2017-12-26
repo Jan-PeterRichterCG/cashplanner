@@ -13,7 +13,10 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntrySearchCriteriaTo;
@@ -26,6 +29,8 @@ import eu.jrichter.cashplanner.general.common.AbstractApplicationComponentTest;
  * @since 0.0.1
  */
 public class UcManageAccountingEntryTest extends AbstractApplicationComponentTest {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UcManageAccountingEntryTest.class);
 
   @Inject
   Bankaccountmanagement bankacountmanagement;
@@ -42,7 +47,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
   @Test
   public void testImportAccountingEntriesEtosMustNotContainIds() throws IllegalArgumentException {
 
-    HashSet<AccountingEntryEto> accountingEntries = new HashSet<>();
+    HashSet<AccountingEntry> accountingEntries = new HashSet<>();
     accountingEntries.add(new AccountingEntryEto());
     accountingEntries.add(new AccountingEntryEto());
     accountingEntries.add(new AccountingEntryEto());
@@ -72,11 +77,11 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
 
     assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
 
-    for (AccountingEntryEto eto : etos) {
-      eto.setId(null); // must be null to adhere to the contract
+    for (AccountingEntry entry : etos) {
+      entry.setId(null); // must be null to adhere to the contract
     }
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(0); // indicating that no new entry was written
@@ -105,7 +110,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     AccountingEntryEto etoToUpdate = etos.get(0);
     etoToUpdate.setValueDate(etoToUpdate.getValueDate().plusDays(1));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
@@ -139,7 +144,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     AccountingEntryEto etoToUpdate = etos.get(0);
     etoToUpdate.setValueDate(etoToUpdate.getValueDate().plusDays(1));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.NONE);
     assertThat(importedAccountingEntries.size()).isEqualTo(0); // indicating that no entry was written or updated
@@ -168,7 +173,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     AccountingEntryEto etoToUpdate = etos.get(0);
     etoToUpdate.setDateOfBookkeepingEntry(etoToUpdate.getDateOfBookkeepingEntry().plusDays(1));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
@@ -201,7 +206,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     AccountingEntryEto etoToUpdate = etos.get(0);
     etoToUpdate.setPostingText(etoToUpdate.getPostingText().concat("foo"));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
@@ -237,7 +242,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     else
       etoToUpdate.setCurrency(Currency.getInstance("EUR"));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
@@ -270,7 +275,7 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     AccountingEntryEto etoToUpdate = etos.get(0);
     etoToUpdate.setAmount(etoToUpdate.getAmount().add(BigDecimal.valueOf(1, 2)));
 
-    Collection<AccountingEntryEto> importedAccountingEntries;
+    Collection<AccountingEntry> importedAccountingEntries;
     importedAccountingEntries = this.bankacountmanagement.importAccountingEntries(etos,
         UcManageAccountingEntryAction.UPDATE_VALUE_DATE);
     assertThat(importedAccountingEntries.size()).isEqualTo(1); // indicating that one entry was written or updated
@@ -281,5 +286,75 @@ public class UcManageAccountingEntryTest extends AbstractApplicationComponentTes
     Long idInResult = ((AccountingEntryEto) (importedAccountingEntries.toArray()[0])).getId();
     AccountingEntryEto etoFound = this.bankacountmanagement.findAccountingEntry(idInResult);
     assertThat(etoFound.getAmount()).isEqualTo(etoToUpdate.getAmount());
+  }
+
+  /**
+   * Tests that transactions from an account transaction report file are correctly imported
+   */
+  @Test
+  @Transactional
+  public void testImportAccountingEntriesFromFile() {
+
+    AccountingEntrySearchCriteriaTo criteria = new AccountingEntrySearchCriteriaTo();
+    // just use empty search criteria to get all entities
+    List<AccountingEntryEto> etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+
+    assertThat(etos.size()).isGreaterThan(0); // make sure that there is some test data in the database
+
+    String path = "C:/OASP/IDE/workspaces/main/cashplanner/core/src/test/resources/file/umsaetze-47110815-2017-12-21-21-30-49.csv";
+    int imported = this.bankacountmanagement.importAccountingEntriesFromFile(path);
+
+    assertThat(imported).isEqualTo(9); // there are 9 transactions but one is marked "*"
+
+    List<AccountingEntryEto> etos2 = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos2.size()).isEqualTo(etos.size() + 9); // there should be 8 new entries in the database
+
+    criteria = new AccountingEntrySearchCriteriaTo();
+    criteria.setAmount(BigDecimal.valueOf(-4548, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("Sirius Cybernetics Corporation SEPA-BASISLASTSCHRIFT")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(987654, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("CAPGEMINI DEUTSCHLAND GMBHSEPA-LOHN/GEHALT SVWZ+ SALA")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(-40000, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("BARCLAYCARD SEPA-BASISLASTSCHRIFT SVWZ+ CDBL Kreditkar")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(89164, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText()
+        .indexOf("CAPGEMINI DEUTSCHLAND GMBHSEPA-ÜBERWEISUNG SVWZ+ 2017 123456 EREF+ 5140767")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(10000, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("Arthur Dent SEPA-ÜBERWEISUNG SVWZ+ Weihnachtsgesc henk")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(-10000, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("12345678 GAA  11.07 KARTE 123456789   16.12 CSC3 1070")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(-1099, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("NETFLIX INTERNATIONAL B.V.SEPA-BASISLASTSCHRIFT SVWZ+")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(9915, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText()
+        .indexOf("CAPGEMINI DEUTSCHLAND GMBHSEPA-ÜBERWEISUNG SVWZ+ 2017 654321 EREF+ 5138250")).isZero();
+
+    criteria.setAmount(BigDecimal.valueOf(-2203, 2));
+    etos = this.bankacountmanagement.findAccountingEntryEtos(criteria).getResult();
+    assertThat(etos.size()).isEqualTo(1);
+    assertThat(etos.get(0).getPostingText().indexOf("Turn- und SportvereinigungMagrathea von 1892 e.V.")).isZero();
   }
 }

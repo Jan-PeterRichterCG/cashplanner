@@ -55,9 +55,9 @@ public class UcReadAccountTransactionReportTest extends AbstractApplicationCompo
   @Test
   public void testReadAccountTransactionReportReadsFile() {
 
-    String filename = "C:/OASP/IDE/workspaces/main/cashplanner/core/src/test/resources/file/umsaetze-47110815-2017-12-21-21-30-49.csv";
+    String path = "C:/OASP/IDE/workspaces/main/cashplanner/core/src/test/resources/file/umsaetze-47110815-2017-12-21-21-30-49.csv";
 
-    AccountTransactionReportTo atr = this.bankintegration.readAccountTransactionReportFile(filename);
+    AccountTransactionReportTo atr = this.bankintegration.readAccountTransactionReportFile(path);
 
     assertThat(atr.getAccountHolderName()).isEqualTo("Zaphod Beeblebrox");
     assertThat(atr.getAccountNumber()).isEqualTo("47110815");

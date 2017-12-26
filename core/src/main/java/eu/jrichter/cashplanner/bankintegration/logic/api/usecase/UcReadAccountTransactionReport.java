@@ -14,9 +14,9 @@ public interface UcReadAccountTransactionReport {
    * Read an account transaction report from a .csv file. For the time being, the file must provided locally. TODO
    * refactor for web GUI upload
    *
-   * @param filename the filename of the report file
+   * @param path the path of the report file
    * @return the structured account transaction report
    */
-  public AccountTransactionReportTo readAccountTransactionReportFile(String filename);
+  public AccountTransactionReportTo readAccountTransactionReportFile(String path);
 
 }

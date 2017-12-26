@@ -5,6 +5,7 @@ import java.util.Collection;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import eu.jrichter.cashplanner.bankaccountmanagement.common.api.AccountingEntry;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntrySearchCriteriaTo;
@@ -59,9 +60,15 @@ public class BankaccountmanagementImpl extends AbstractComponentFacade implement
   }
 
   @Override
-  public Collection<AccountingEntryEto> importAccountingEntries(Collection<AccountingEntryEto> accountingEntires,
+  public Collection<AccountingEntry> importAccountingEntries(Collection<? extends AccountingEntry> accountingEntires,
       UcManageAccountingEntryAction action) {
 
     return this.ucManageAccountingEntry.importAccountingEntries(accountingEntires, action);
+  }
+
+  @Override
+  public int importAccountingEntriesFromFile(String path) {
+
+    return this.ucManageAccountingEntry.importAccountingEntriesFromFile(path);
   }
 }
