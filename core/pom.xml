@@ -282,11 +282,23 @@
       </dependency>
     -->
 
+    <!-- hibernate-8 in order do correctly map java.time.* data types -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-java8</artifactId>
     </dependency>
 
+    <!-- Apache Tika for detecting / guessing the correct character encoding of e.g a file -->
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-core</artifactId>
+      <version>1.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-parsers</artifactId>
+      <version>1.17</version>
+    </dependency>
   </dependencies>
 
   <profiles>

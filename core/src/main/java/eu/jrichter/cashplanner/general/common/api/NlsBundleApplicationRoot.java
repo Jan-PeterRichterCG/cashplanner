@@ -52,6 +52,22 @@ public interface NlsBundleApplicationRoot extends NlsBundle {
   @NlsBundleMessage("There is currently no user logged in")
   NlsMessage errorNoActiveUser();
 
-  
+  /**
+   * @see eu.jrichter.cashplanner.bankintegration.common.api.exception.ReadFileException
+   *
+   * @param filename is the filename used to read when the error occurred.
+   * @return the {@link NlsMessage}.
+   */
+  @NlsBundleMessage("The file {filename} could not be read!")
+  NlsMessage errorReadFile(@Named("filename") Object filename);
+
+  /**
+   * @see eu.jrichter.cashplanner.bankintegration.common.api.exception.SyntaxErrorException
+   *
+   * @param syntaxError is the syntax error that occurred while parsing the input.
+   * @return the {@link NlsMessage}.
+   */
+  @NlsBundleMessage("The input contains a syntax error: {syntaxError}!")
+  NlsMessage errorSyntaxError(@Named("syntaxError") Object syntaxError);
 
 }
