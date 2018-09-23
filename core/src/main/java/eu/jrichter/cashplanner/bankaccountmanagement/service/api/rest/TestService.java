@@ -7,6 +7,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 
 /**
@@ -22,4 +23,7 @@ public interface TestService {
   @Path("/get/{id}/")
   public AccountingEntryEto getAccountingEntry(@PathParam("id") long id);
 
+  @GET
+  @Path("/import/")
+  public void importAccountTransactionReportFile();
 }

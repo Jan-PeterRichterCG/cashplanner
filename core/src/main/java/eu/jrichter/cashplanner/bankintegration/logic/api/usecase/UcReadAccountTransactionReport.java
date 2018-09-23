@@ -19,4 +19,9 @@ public interface UcReadAccountTransactionReport {
    */
   public AccountTransactionReportTo readAccountTransactionReportFile(String path);
 
+  /**
+   * the maximum length of a account transaction report file - avoids out of memory
+   */
+  public final int MAX_ACCOUNT_TRANSACTION_REPORT_FILE_LENGTH = 1000000000;
+
 }

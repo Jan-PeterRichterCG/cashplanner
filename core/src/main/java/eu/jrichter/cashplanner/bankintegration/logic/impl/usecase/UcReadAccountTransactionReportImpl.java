@@ -4,9 +4,11 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -40,8 +42,17 @@ public class UcReadAccountTransactionReportImpl implements UcReadAccountTransact
   public AccountTransactionReportTo readAccountTransactionReportFile(String path) {
 
     String data = "";
+
+    File file = new File(path);
+    int length = (int) file.length();
+    if (length <= 0 || length > MAX_ACCOUNT_TRANSACTION_REPORT_FILE_LENGTH) {
+      throw new ReadFileException(path);
+    }
+
     try {
-      data = new Tika().parseToString(new File(path));
+      Tika tika = new Tika();
+      tika.setMaxStringLength(length);
+      data = tika.parseToString(file);
     } catch (Exception e) {
       LOG.error("Reading the file resulted in an Exception: " + e.getMessage());
       throw new ReadFileException(e, path);
@@ -64,64 +75,67 @@ public class UcReadAccountTransactionReportImpl implements UcReadAccountTransact
 
     Scanner scanner = new Scanner(in);
     scanner.useDelimiter(Pattern.compile(";|\\R")); // ; or any line break ( we don't care for line breaks)
-    while (scanner.hasNext()) {
-      String token = scanner.next();
 
-      LOG.debug("Token read (" + token.length() + " characters): " + token);
+    try {
+      while (scanner.hasNext()) {
+        String token = scanner.next();
 
-      if (token.length() == 0) // skip empty lines
-        continue;
+        LOG.debug("Token read (" + token.length() + " characters): " + token);
 
-      String strippedToken = strip(token);
+        if (token.length() == 0) // skip empty lines
+          continue;
 
-      if (strippedToken.equals("Kontoinhaber:")) {
-        atr.setAccountHolderName(strip(scanner.next()));
-        LOG.debug("AccountHolderName set to \"" + atr.getAccountHolderName() + "\"");
-        continue;
-      }
+        String strippedToken = strip(token);
 
-      if (strippedToken.equals("Kundennummer:")) {
-        atr.setCustomerId(strip(scanner.next()));
-        LOG.debug("CustomerId set to \"" + atr.getCustomerId() + "\"");
-        continue;
-      }
-
-      if (strippedToken.equals("Umsätze ab")) {
-        parseStartDateEndDateAccountNumberBalanceAmountCurrency(atr, token, scanner);
-        LOG.debug("StarDate set to \"" + atr.getStartDate() + "\"");
-        LOG.debug("EndDate set to \"" + atr.getEndDate() + "\"");
-        LOG.debug("AccountNumber set to \"" + atr.getAccountNumber() + "\"");
-        LOG.debug("BalanceAmount set to \"" + atr.getBalanceAmount() + "\"");
-        LOG.debug("BalanceCurrency set to \"" + atr.getBalanceCurrency() + "\"");
-        continue;
-      }
-
-      if (strippedToken.equals("Weitere gewählte Suchoptionen:")) {
-        atr.setAdditionalSearchOptions(strip(scanner.next()));
-        LOG.debug("AdditionalSearchOptions set to \"" + atr.getAdditionalSearchOptions() + "\"");
-        continue;
-      }
-
-      if (strippedToken.equals("Buchungstag")) {
-        parseTransactions(atr, token, scanner);
-        List<AccountTransaction> atl = atr.getAccountTransactions();
-        if (atl != null) {
-          int index = 0;
-          for (AccountTransaction at : atl) {
-            LOG.debug("AccountTransaction " + index++ + " set to " + at.getDateOfBookkeepingEntry() + ","
-                + at.getValueDate() + ", \"" + at.getPostingText() + "\", " + at.getAmount() + ", " + at.getCurrency()
-                + ", \"" + at.getMarker() + "\"");
-          }
+        if (strippedToken.equals("Kontoinhaber:")) {
+          atr.setAccountHolderName(strip(scanner.next()));
+          LOG.debug("AccountHolderName set to \"" + atr.getAccountHolderName() + "\"");
+          continue;
         }
+
+        if (strippedToken.equals("Kundennummer:")) {
+          atr.setCustomerId(strip(scanner.next()));
+          LOG.debug("CustomerId set to \"" + atr.getCustomerId() + "\"");
+          continue;
+        }
+
+        if (strippedToken.equals("Umsätze ab")) {
+          parseStartDateEndDateAccountNumberBalanceAmountCurrency(atr, token, scanner);
+          LOG.debug("StarDate set to \"" + atr.getStartDate() + "\"");
+          LOG.debug("EndDate set to \"" + atr.getEndDate() + "\"");
+          LOG.debug("AccountNumber set to \"" + atr.getAccountNumber() + "\"");
+          LOG.debug("BalanceAmount set to \"" + atr.getBalanceAmount() + "\"");
+          LOG.debug("BalanceCurrency set to \"" + atr.getBalanceCurrency() + "\"");
+          continue;
+        }
+
+        if (strippedToken.equals("Weitere gewählte Suchoptionen:")) {
+          atr.setAdditionalSearchOptions(strip(scanner.next()));
+          LOG.debug("AdditionalSearchOptions set to \"" + atr.getAdditionalSearchOptions() + "\"");
+          continue;
+        }
+
+        if (strippedToken.equals("Buchungstag")) {
+          parseTransactions(atr, token, scanner);
+          List<AccountTransaction> atl = atr.getAccountTransactions();
+          if (atl != null) {
+            int index = 0;
+            for (AccountTransaction at : atl) {
+              LOG.debug("AccountTransaction " + index++ + " set to " + at.getDateOfBookkeepingEntry() + ","
+                  + at.getValueDate() + ", \"" + at.getPostingText() + "\", " + at.getAmount() + ", " + at.getCurrency()
+                  + ", \"" + at.getMarker() + "\"");
+            }
+          }
+          continue;
+        }
+
+        atr.setTitle(strippedToken);
+        LOG.debug("Title set to \"" + atr.getTitle() + "\"");
         continue;
       }
-
-      atr.setTitle(strippedToken);
-      LOG.debug("Title set to \"" + atr.getTitle() + "\"");
-      continue;
+    } finally {
+      scanner.close();
     }
-    scanner.close();
-
     return atr;
   }
 
@@ -152,22 +166,26 @@ public class UcReadAccountTransactionReportImpl implements UcReadAccountTransact
     if (!strip(token).equals("Währung"))
       throw new SyntaxErrorException(token);
 
-    token = strip(scanner.next());
-    atr.setStartDate(LocalDate.parse(token, formatter));
+    try {
+      token = strip(scanner.next());
+      atr.setStartDate(LocalDate.parse(token, formatter));
 
-    token = strip(scanner.next());
-    atr.setEndDate(LocalDate.parse(token, formatter));
+      token = strip(scanner.next());
+      atr.setEndDate(LocalDate.parse(token, formatter));
 
-    token = strip(scanner.next());
-    atr.setAccountNumber(token);
+      token = strip(scanner.next());
+      atr.setAccountNumber(token);
 
-    token = strip(scanner.next());
-    String normalizedToken = token.replaceAll("\\.", "").replace(",", "."); // we know that we have German locale
-    LOG.debug("normalizedToken for balanceAmount " + normalizedToken);
-    atr.setBalanceAmount(new BigDecimal(normalizedToken));
+      token = strip(scanner.next());
+      String normalizedToken = token.replaceAll("\\.", "").replace(",", "."); // we know that we have German locale
+      LOG.debug("normalizedToken for balanceAmount " + normalizedToken);
+      atr.setBalanceAmount(new BigDecimal(normalizedToken));
 
-    token = strip(scanner.next());
-    atr.setBalanceCurrency(Currency.getInstance(token));
+      token = strip(scanner.next());
+      atr.setBalanceCurrency(Currency.getInstance(token));
+    } catch (DateTimeParseException | NumberFormatException ex) {
+      throw new SyntaxErrorException(ex, token);
+    }
   }
 
   private void parseTransactions(AccountTransactionReportTo atr, String startingToken, Scanner scanner) {
@@ -193,34 +211,41 @@ public class UcReadAccountTransactionReportImpl implements UcReadAccountTransact
 
     atr.setAccountTransactions(new ArrayList<AccountTransaction>());
 
-    while (scanner.hasNext()) {
-      token = scanner.next();
+    try {
+      while (scanner.hasNext()) {
+        token = scanner.next();
 
-      if (strip(token).equals("* noch nicht ausgeführte Umsätze"))
-        return;
+        if (strip(token).equals("* noch nicht ausgeführte Umsätze"))
+          return;
 
-      AccountTransaction at = new AccountTransactionTo();
+        AccountTransaction at = new AccountTransactionTo();
 
-      at.setDateOfBookkeepingEntry(LocalDate.parse(strip(token), formatter));
+        at.setDateOfBookkeepingEntry(LocalDate.parse(strip(token), formatter));
 
-      token = strip(scanner.next());
-      at.setValueDate(LocalDate.parse(token, formatter));
+        token = strip(scanner.next());
+        at.setValueDate(LocalDate.parse(token, formatter));
 
-      token = strip(scanner.next());
-      at.setPostingText(token);
+        token = strip(scanner.next());
+        at.setPostingText(token);
 
-      token = strip(scanner.next());
-      String normalizedToken = token.replaceAll("\\.", "").replace(",", "."); // we know that we have German locale
-      LOG.debug("normalizedToken for amount " + normalizedToken);
-      at.setAmount(new BigDecimal(normalizedToken));
+        token = strip(scanner.next());
+        String normalizedToken = token.replaceAll("\\.", "").replace(",", "."); // we know that we have German locale
+        LOG.debug("normalizedToken for amount " + normalizedToken);
+        at.setAmount(new BigDecimal(normalizedToken));
 
-      token = strip(scanner.next());
-      at.setCurrency(Currency.getInstance(token));
+        token = strip(scanner.next());
+        at.setCurrency(Currency.getInstance(token));
 
-      token = strip(scanner.next());
-      at.setMarker(token);
+        token = strip(scanner.next());
+        at.setMarker(token);
 
-      atr.getAccountTransactions().add(at);
+        atr.getAccountTransactions().add(at);
+      }
+    } catch (DateTimeParseException | IllegalArgumentException | NoSuchElementException ex) { // NumberFormatException
+                                                                                              // extends
+      // IllegalArgumentException
+      throw new SyntaxErrorException(ex, token);
     }
+
   }
 }

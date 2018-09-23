@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.AccountingEntryEntity;
 import eu.jrichter.cashplanner.bankaccountmanagement.dataaccess.api.dao.AccountingEntryDao;
+import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.Bankaccountmanagement;
 import eu.jrichter.cashplanner.bankaccountmanagement.logic.api.to.AccountingEntryEto;
 import eu.jrichter.cashplanner.bankaccountmanagement.service.api.rest.TestService;
 import eu.jrichter.cashplanner.general.logic.api.UseCase;
@@ -30,6 +31,9 @@ public class TestServiceImpl extends AbstractUc implements TestService {
 
   @Inject
   private AccountingEntryDao accountingEntryDao;
+
+  @Inject
+  private Bankaccountmanagement bankaccountmanagement;
 
   /** Logger instance. */
   private static final Logger LOG = LoggerFactory.getLogger(TestServiceImpl.class);
@@ -54,4 +58,16 @@ public class TestServiceImpl extends AbstractUc implements TestService {
     return getBeanMapper().map(entity, AccountingEntryEto.class);
   }
 
+  @Override
+  @Transactional
+  public void importAccountTransactionReportFile() {
+
+    LOG.info("TestService called - import Account Transaction Report File ");
+
+    int number = this.bankaccountmanagement
+        .importAccountingEntriesFromFile("C:/Users/jrichter/Desktop/umsaetze-37223.csv");
+
+    LOG.info("File imported: " + number);
+
+  }
 }

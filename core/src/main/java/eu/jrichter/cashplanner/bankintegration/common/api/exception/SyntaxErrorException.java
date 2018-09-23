@@ -25,4 +25,16 @@ public class SyntaxErrorException extends ApplicationTechnicalException {
 
     super(createBundle(NlsBundleApplicationRoot.class).errorSyntaxError(syntaxError));
   }
+
+  /**
+   * The other constructor.
+   *
+   * @param error the causing exception - e.g. from a date parser
+   *
+   * @param syntaxError the syntax error
+   */
+  public SyntaxErrorException(Throwable error, String syntaxError) {
+
+    super(error, createBundle(NlsBundleApplicationRoot.class).errorSyntaxError(syntaxError));
+  }
 }

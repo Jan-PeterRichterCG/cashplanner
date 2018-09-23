@@ -19,6 +19,16 @@ public class ReadFileException extends ApplicationTechnicalException {
   /**
    * The constructor.
    *
+   * @param path to the file that caused the error
+   */
+  public ReadFileException(String path) {
+
+    super(createBundle(NlsBundleApplicationRoot.class).errorReadFile(path));
+  }
+
+  /**
+   * The other constructor.
+   *
    * @param t the throwable caught - will be wrapped
    * @param path to the file that caused the error
    */

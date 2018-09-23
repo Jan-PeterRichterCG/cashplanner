@@ -67,7 +67,7 @@ public interface NlsBundleApplicationRoot extends NlsBundle {
    * @param syntaxError is the syntax error that occurred while parsing the input.
    * @return the {@link NlsMessage}.
    */
-  @NlsBundleMessage("The input contains a syntax error: {syntaxError}!")
+  @NlsBundleMessage("The input contains a syntax error at or near \"{syntaxError}\".")
   NlsMessage errorSyntaxError(@Named("syntaxError") Object syntaxError);
 
 }
